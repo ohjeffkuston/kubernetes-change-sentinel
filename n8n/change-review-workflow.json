@@ -1,0 +1,83 @@
+{
+  "name": "Kubernetes Change Sentinel - Approval Route",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "kubernetes-change-report",
+        "responseMode": "lastNode"
+      },
+      "id": "webhook",
+      "name": "Receive Read-Only Report",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [260, 300]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict"
+          },
+          "conditions": [
+            {
+              "leftValue": "={{ $json.decision }}",
+              "rightValue": "PASS",
+              "operator": {
+                "type": "string",
+                "operation": "notEquals"
+              }
+            }
+          ],
+          "combinator": "and"
+        }
+      },
+      "id": "approval-gate",
+      "name": "Needs Human Review?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2,
+      "position": [500, 300]
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "status",
+              "name": "status",
+              "type": "string",
+              "value": "approval_required"
+            },
+            {
+              "id": "note",
+              "name": "note",
+              "type": "string",
+              "value": "No cluster change was applied."
+            }
+          ]
+        }
+      },
+      "id": "prepare-review",
+      "name": "Prepare Review Record",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [740, 220]
+    }
+  ],
+  "connections": {
+    "Receive Read-Only Report": {
+      "main": [[{"node": "Needs Human Review?", "type": "main", "index": 0}]]
+    },
+    "Needs Human Review?": {
+      "main": [[{"node": "Prepare Review Record", "type": "main", "index": 0}], []]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "versionId": "afe081a2-e2e5-4e35-a8e0-0efb198b1de7"
+}
+
